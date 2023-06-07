@@ -8,4 +8,6 @@ import lombok.experimental.SuperBuilder;
 public class GetContentRequest {
     private String partnerId;
     private String contentType;
+    private String lang;
+    private String lastFetchDate;
 }
