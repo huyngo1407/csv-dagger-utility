@@ -11,10 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -30,10 +27,13 @@ public class ContentController {
 
     //    public ResponseEntity<Object> getAll(@PathVariable("partner-id") String partnerId, @PathVariable("content-type") String contentType) {
     @GetMapping("/{partnerId}/incremental-data/{contentType}")
-    public ResponseEntity<Object> getContents(@PathVariable String partnerId, @PathVariable String contentType) {
+    public ResponseEntity<Object> getContents(@PathVariable String partnerId, @PathVariable String contentType,
+                                              @RequestParam("lang") String lang, @RequestParam("lastFetchDate") String lastFetchDate) {
         GetContentRequest getContentRequest = GetContentRequest.builder()
                 .partnerId(partnerId)
                 .contentType(contentType)
+                .lang(lang)
+                .lastFetchDate(lastFetchDate)
                 .build();
         Map<String, Object> contentToPartnerId = contentService.getContents(getContentRequest);
         return ApiResponseUtil.build(HttpStatus.OK, ResponseMessageCode.CsvDagger.Success.GET_DATA, contentToPartnerId);
