@@ -1,7 +1,0 @@
-server:
-  servlet:
-    context-path: /v1
-file:
-  path:
-    image: public/image.yaml
-    content: public/content.yaml
