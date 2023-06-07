@@ -1,0 +1,109 @@
+{
+	"info": {
+		"_postman_id": "c29ac38f-6aeb-43ab-89dc-d64e59094a8e",
+		"name": "Csv dagger utility",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "10735069"
+	},
+	"item": [
+		{
+			"name": "Get csv daggers",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/csv-daggers?fetch-date=",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"csv-daggers"
+					],
+					"query": [
+						{
+							"key": "fetch-date",
+							"value": ""
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create csv daggers",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"entryDate\": \"19950713\",\r\n    \"partnerId\": \"SOC\",\r\n    \"language\": \"id\",\r\n    \"key\": \"prelogin.button.apply\",\r\n    \"value\": \"Daftar id/ Login id\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/csv-daggers",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"csv-daggers"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get contents",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/v1/contents/SOC/incremental-data/image",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"v1",
+						"contents",
+						"SOC",
+						"incremental-data",
+						"image"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get image",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/v1/contents/BLK/images/image001",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"v1",
+						"contents",
+						"BLK",
+						"images",
+						"image001"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
