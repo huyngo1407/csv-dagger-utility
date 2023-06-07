@@ -31,7 +31,7 @@ public class ContentService {
     }
 
     private Map<String, Object> filterContent(GetContentRequest getContentRequest) {
-        if (!GetContentsValidator.isContentTypeValid(getContentRequest.getContentType())) {
+        if (RECORD_TO_PARTNER_ID.isEmpty() || !GetContentsValidator.isContentTypeValid(getContentRequest.getContentType())) {
             return Map.of(
                     getContentRequest.getContentType(), Map.of(
                             getContentRequest.getPartnerId(), Map.of(
