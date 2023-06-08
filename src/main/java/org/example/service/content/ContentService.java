@@ -5,7 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.controller.request.GetContentRequest;
 import org.example.controller.request.GetImageRequest;
 import org.example.custom_exception.NotFoundException;
+import org.example.model.KeyValue;
 import org.example.validator.GetContentsValidator;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -13,6 +15,7 @@ import org.springframework.util.StringUtils;
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toMap;
 
@@ -22,14 +25,15 @@ import static java.util.stream.Collectors.toMap;
 public class ContentService {
     public static Map<String, Object> RECORD_TO_PARTNER_ID = new ConcurrentHashMap<>();
 
-    //    @Cacheable(value = "contents")
-    public List<LinkedHashMap> getContents(GetContentRequest getContentRequest) {
+
+    @Cacheable(value = "contents")
+    public List<KeyValue> getContents(GetContentRequest getContentRequest) {
         log.info("Start fetching contents");
-        List<LinkedHashMap> keyValues = filterContent(getContentRequest);
+        List<KeyValue> keyValues = filterContent(getContentRequest);
         return keyValues;
     }
 
-    private List<LinkedHashMap> filterContent(GetContentRequest getContentRequest) {
+    private List<KeyValue> filterContent(GetContentRequest getContentRequest) {
         if (RECORD_TO_PARTNER_ID.isEmpty() || !GetContentsValidator.isContentTypeValid(getContentRequest.getContentType())) {
             return new ArrayList<>();
         }
@@ -42,9 +46,14 @@ public class ContentService {
                 : new HashMap<>();
         Map<String, Object> filteredDateToKeyValue = filterDateToKeyValue(dateToKeyValue, getContentRequest.getLastFetchDate());
         Map<String, Object> sortedDateToKeyValue = sortDateToKeyValue(filteredDateToKeyValue);
-        List<LinkedHashMap> result = new ArrayList<>();
+        List<KeyValue> result = new ArrayList<>();
         for (Map.Entry<String, Object> sortedDateToKeyValueEntry : sortedDateToKeyValue.entrySet()) {
-            List<LinkedHashMap> keyValues = (List<LinkedHashMap>) sortedDateToKeyValueEntry.getValue();
+            List<KeyValue> keyValues = ((List<LinkedHashMap>) sortedDateToKeyValueEntry.getValue()).stream()
+                    .map(linkedHashMap -> KeyValue.builder()
+                            .key(linkedHashMap.get("key").toString())
+                            .value(linkedHashMap.get("value").toString())
+                            .build()
+                    ).collect(Collectors.toList());
             result.addAll(keyValues);
         }
         return result;

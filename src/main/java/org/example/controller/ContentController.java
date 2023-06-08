@@ -3,6 +3,7 @@ package org.example.controller;
 import lombok.RequiredArgsConstructor;
 import org.example.controller.request.GetContentRequest;
 import org.example.controller.request.GetImageRequest;
+import org.example.model.KeyValue;
 import org.example.service.content.ContentService;
 import org.example.util.api_response.ApiResponseUtil;
 import org.example.value_object.ResponseMessageCode;
@@ -17,7 +18,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URLConnection;
-import java.util.LinkedHashMap;
 import java.util.List;
 
 @Controller
@@ -36,7 +36,7 @@ public class ContentController {
                 .lang(lang)
                 .lastFetchDate(lastFetchDate)
                 .build();
-        List<LinkedHashMap> keyValues = contentService.getContents(getContentRequest);
+        List<KeyValue> keyValues = contentService.getContents(getContentRequest);
         return ApiResponseUtil.build(HttpStatus.OK, ResponseMessageCode.CsvDagger.Success.GET_DATA, keyValues);
     }
 
