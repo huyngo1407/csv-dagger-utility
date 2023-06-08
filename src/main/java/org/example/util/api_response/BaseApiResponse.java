@@ -16,7 +16,6 @@ public class BaseApiResponse {
     @Builder.Default
     private Instant timestamp = Instant.now();
     private String message;
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Object data;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<Object> errors;
