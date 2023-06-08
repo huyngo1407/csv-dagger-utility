@@ -1,7 +1,7 @@
 package org.example.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.example.controller.request.GetContentRequest;
+import org.example.controller.request.ContentRequest;
 import org.example.controller.request.GetImageRequest;
 import org.example.model.KeyValue;
 import org.example.service.content.ContentService;
@@ -26,17 +26,16 @@ import java.util.List;
 public class ContentController {
     private final ContentService contentService;
 
-    //    public ResponseEntity<Object> getAll(@PathVariable("partner-id") String partnerId, @PathVariable("content-type") String contentType) {
     @GetMapping("/{partnerId}/incremental-data/{contentType}")
     public ResponseEntity<Object> getContents(@PathVariable String partnerId, @PathVariable String contentType,
                                               @RequestParam("lang") String lang, @RequestParam("lastFetchDate") String lastFetchDate) {
-        GetContentRequest getContentRequest = GetContentRequest.builder()
+        ContentRequest contentRequest = ContentRequest.builder()
                 .partnerId(partnerId)
                 .contentType(contentType)
                 .lang(lang)
                 .lastFetchDate(lastFetchDate)
                 .build();
-        List<KeyValue> keyValues = contentService.getContents(getContentRequest);
+        List<KeyValue> keyValues = contentService.getContents(contentRequest);
         return ApiResponseUtil.build(HttpStatus.OK, ResponseMessageCode.CsvDagger.Success.GET_DATA, keyValues);
     }
 

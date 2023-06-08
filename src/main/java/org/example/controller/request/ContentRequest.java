@@ -5,7 +5,7 @@ import lombok.experimental.SuperBuilder;
 
 @Data
 @SuperBuilder
-public class GetContentRequest {
+public class ContentRequest {
     private String partnerId;
     private String contentType;
     private String lang;

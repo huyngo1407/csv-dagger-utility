@@ -9,6 +9,9 @@ label:
           value: BLK Breadcrumb
         - key: label.buy
           value: BLK Buy
+      19950714:
+        - key: label.logout
+          value: BLK Logout
     id:
       20230605:
         - key: label.login
@@ -18,6 +21,9 @@ label:
           value: BLK Remah roti
         - key: label.buy
           value: BLK Membeli
+      19950714:
+        - key: label.logout
+          value: BLK Keluar
   SOC:
     en:
       - 20230605:
@@ -35,10 +41,16 @@ error:
           value: BLK Not found
         - key: error.internal_server
           value: BLK Internal server error
+      19950714:
+        - key: error.proxy
+          value: BLK Proxy
     id:
       20230605:
         - key: error.wrong_password
           value: BLK Kata Sandi Salah
+      19950714:
+        - key: error.proxy
+          value: BLK Proksi
   SOC:
     en:
       20230605:
