@@ -1,4 +1,4 @@
-package org.example.service;
+package org.example.service.content;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -6,7 +6,6 @@ import org.example.controller.request.GetContentRequest;
 import org.example.controller.request.GetImageRequest;
 import org.example.custom_exception.NotFoundException;
 import org.example.validator.GetContentsValidator;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -23,24 +22,16 @@ import static java.util.stream.Collectors.toMap;
 public class ContentService {
     public static Map<String, Object> RECORD_TO_PARTNER_ID = new ConcurrentHashMap<>();
 
-    @Cacheable(value = "contents")
-    public Map<String, Object> getContents(GetContentRequest getContentRequest) {
+    //    @Cacheable(value = "contents")
+    public List<LinkedHashMap> getContents(GetContentRequest getContentRequest) {
         log.info("Start fetching contents");
-        Map<String, Object> filteredContent = filterContent(getContentRequest);
-        return filteredContent;
+        List<LinkedHashMap> keyValues = filterContent(getContentRequest);
+        return keyValues;
     }
 
-    private Map<String, Object> filterContent(GetContentRequest getContentRequest) {
+    private List<LinkedHashMap> filterContent(GetContentRequest getContentRequest) {
         if (RECORD_TO_PARTNER_ID.isEmpty() || !GetContentsValidator.isContentTypeValid(getContentRequest.getContentType())) {
-            return Map.of(
-                    getContentRequest.getContentType(), Map.of(
-                            getContentRequest.getPartnerId(), Map.of(
-                                    getContentRequest.getLang(), Map.of(
-                                            getContentRequest.getLastFetchDate(), new ArrayList<>()
-                                    )
-                            )
-                    )
-            );
+            return new ArrayList<>();
         }
         Map<String, Object> partnerIdToLanguage = (Map<String, Object>) RECORD_TO_PARTNER_ID.get(getContentRequest.getContentType());
         Map<String, Object> languageToDate = (Map<String, Object>) partnerIdToLanguage.get(getContentRequest.getPartnerId());
@@ -51,13 +42,12 @@ public class ContentService {
                 : new HashMap<>();
         Map<String, Object> filteredDateToKeyValue = filterDateToKeyValue(dateToKeyValue, getContentRequest.getLastFetchDate());
         Map<String, Object> sortedDateToKeyValue = sortDateToKeyValue(filteredDateToKeyValue);
-        return Map.of(
-                getContentRequest.getContentType(), Map.of(
-                        getContentRequest.getPartnerId(), Map.of(
-                                getContentRequest.getLang(), sortedDateToKeyValue
-                        )
-                )
-        );
+        List<LinkedHashMap> result = new ArrayList<>();
+        for (Map.Entry<String, Object> sortedDateToKeyValueEntry : sortedDateToKeyValue.entrySet()) {
+            List<LinkedHashMap> keyValues = (List<LinkedHashMap>) sortedDateToKeyValueEntry.getValue();
+            result.addAll(keyValues);
+        }
+        return result;
     }
 
     private Map<String, Object> filterDateToKeyValue(Map<String, Object> dateToKeyValue, String lastFetchDate) {
