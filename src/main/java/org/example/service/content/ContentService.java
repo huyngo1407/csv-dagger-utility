@@ -37,27 +37,27 @@ public class ContentService {
         if (RECORD_TO_PARTNER_ID.isEmpty() || !ContentsValidator.isContentTypeValid(contentRequest.getContentType())) {
             return new ArrayList<>();
         }
-        Map<String, List<LinkedHashMap>> partnerIdToLanguage = (Map<String, List<LinkedHashMap>>) RECORD_TO_PARTNER_ID.get(contentRequest.getContentType());
-        Map<String, List<LinkedHashMap>> languageToDate = (Map<String, List<LinkedHashMap>>) partnerIdToLanguage.get(contentRequest.getPartnerId());
-        List<Map<String, List<LinkedHashMap>>> dateToKeyValues = !ObjectUtils.isEmpty(languageToDate.get(contentRequest.getLang())) ?
-                Collections.singletonList((Map<String, List<LinkedHashMap>>) languageToDate.get(contentRequest.getLang())) :
-                languageToDate.entrySet()
-                        .stream().map(languageToDateEntry -> (Map<String, List<LinkedHashMap>>) languageToDateEntry.getValue())
+        Map<String, List<LinkedHashMap>> filteredByContentType = (Map<String, List<LinkedHashMap>>) RECORD_TO_PARTNER_ID.get(contentRequest.getContentType());
+        Map<String, List<LinkedHashMap>> filteredByPartnerId = (Map<String, List<LinkedHashMap>>) filteredByContentType.get(contentRequest.getPartnerId());
+        List<Map<String, List<LinkedHashMap>>> filteredByLanguages = !ObjectUtils.isEmpty(filteredByPartnerId.get(contentRequest.getLang())) ?
+                Collections.singletonList((Map<String, List<LinkedHashMap>>) filteredByPartnerId.get(contentRequest.getLang())) :
+                filteredByPartnerId.entrySet()
+                        .stream().map(filteredByPartnerIdEntry -> (Map<String, List<LinkedHashMap>>) filteredByPartnerIdEntry.getValue())
                         .collect(Collectors.toList());
-        Map<String, List<KeyValue>> combinedDateToKeyValue = combineDateToKeyValue(dateToKeyValues);
+        Map<String, List<KeyValue>> combinedDateToKeyValue = combineDateToKeyValue(filteredByLanguages);
         Map<String, List<KeyValue>> filteredDateToKeyValue = filterDateToKeyValue(combinedDateToKeyValue, contentRequest.getLastFetchDate());
         Map<String, List<KeyValue>> sortedDateToKeyValue = sortDateToKeyValue(filteredDateToKeyValue);
         return getKeyValues(sortedDateToKeyValue);
     }
 
-    private Map<String, List<KeyValue>> combineDateToKeyValue(List<Map<String, List<LinkedHashMap>>> dateToKeyValues) {
+    private Map<String, List<KeyValue>> combineDateToKeyValue(List<Map<String, List<LinkedHashMap>>> filteredByLanguages) {
         Map<String, List<KeyValue>> combinedDateToKeyValue = new HashMap<>();
-        for (Map<String, List<LinkedHashMap>> dateToKeyValue : dateToKeyValues) {
-            for (Map.Entry<String, List<LinkedHashMap>> dateToKeyValueEntry : dateToKeyValue.entrySet()) {
-                String entryDate = String.valueOf(dateToKeyValueEntry.getKey());
+        for (Map<String, List<LinkedHashMap>> filteredByLanguage : filteredByLanguages) {
+            for (Map.Entry<String, List<LinkedHashMap>> filteredByLanguageEntry : filteredByLanguage.entrySet()) {
+                String entryDate = String.valueOf(filteredByLanguageEntry.getKey());
                 if (ObjectUtils.isEmpty(combinedDateToKeyValue.get(entryDate))) {
                     List<KeyValue> keyValues = new ArrayList<>();
-                    dateToKeyValueEntry.getValue().stream()
+                    filteredByLanguageEntry.getValue().stream()
                             .forEach(linkedHashMap -> keyValues.add(KeyValue.builder()
                                     .key(String.valueOf(linkedHashMap.get("key")))
                                     .value(String.valueOf(linkedHashMap.get("value")))
@@ -65,7 +65,7 @@ public class ContentService {
                     combinedDateToKeyValue.put(entryDate, keyValues);
                 } else {
                     List<KeyValue> keyValues = combinedDateToKeyValue.get(entryDate);
-                    dateToKeyValueEntry.getValue().stream()
+                    filteredByLanguageEntry.getValue().stream()
                             .forEach(linkedHashMap -> keyValues.add(KeyValue.builder()
                                     .key(String.valueOf(linkedHashMap.get("key")))
                                     .value(String.valueOf(linkedHashMap.get("value")))
