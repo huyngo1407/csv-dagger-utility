@@ -44,41 +44,63 @@ public class ContentService {
                 languageToDate.entrySet()
                         .stream().map(languageToDateEntry -> (Map<String, List<LinkedHashMap>>) languageToDateEntry.getValue())
                         .collect(Collectors.toList());
-        List<Map<String, List<LinkedHashMap>>> filteredDateToKeyValues = filterDateToKeyValues(dateToKeyValues, contentRequest.getLastFetchDate());
-        List<Map<String, List<LinkedHashMap>>> sortedDateToKeyValues = sortDateToKeyValues(filteredDateToKeyValues);
-        List<KeyValue> keyValues = new ArrayList<>();
-        sortedDateToKeyValues.stream()
-                .forEach(sortedDateToKeyValue -> sortedDateToKeyValue.entrySet().stream()
-                        .forEach(sortedDateToKeyValueEntry -> sortedDateToKeyValueEntry.getValue().stream()
-                                .forEach(keyValue -> keyValues.add(KeyValue.builder()
-                                        .key(String.valueOf(keyValue.get("key")))
-                                        .value(String.valueOf(keyValue.get("value")))
-                                        .build()))));
-
-        return keyValues;
+        Map<String, List<KeyValue>> combinedDateToKeyValue = combineDateToKeyValue(dateToKeyValues);
+        Map<String, List<KeyValue>> filteredDateToKeyValue = filterDateToKeyValue(combinedDateToKeyValue, contentRequest.getLastFetchDate());
+        Map<String, List<KeyValue>> sortedDateToKeyValue = sortDateToKeyValue(filteredDateToKeyValue);
+        return getKeyValues(sortedDateToKeyValue);
     }
 
-    private List<Map<String, List<LinkedHashMap>>> filterDateToKeyValues(List<Map<String, List<LinkedHashMap>>> dateToKeyValues, String lastFetchDate) {
-        if (!StringUtils.hasText(lastFetchDate)) {
-            return dateToKeyValues;
+    private Map<String, List<KeyValue>> combineDateToKeyValue(List<Map<String, List<LinkedHashMap>>> dateToKeyValues) {
+        Map<String, List<KeyValue>> combinedDateToKeyValue = new HashMap<>();
+        for (Map<String, List<LinkedHashMap>> dateToKeyValue : dateToKeyValues) {
+            for (Map.Entry<String, List<LinkedHashMap>> dateToKeyValueEntry : dateToKeyValue.entrySet()) {
+                String entryDate = String.valueOf(dateToKeyValueEntry.getKey());
+                if (ObjectUtils.isEmpty(combinedDateToKeyValue.get(entryDate))) {
+                    List<KeyValue> keyValues = new ArrayList<>();
+                    dateToKeyValueEntry.getValue().stream()
+                            .forEach(linkedHashMap -> keyValues.add(KeyValue.builder()
+                                    .key(String.valueOf(linkedHashMap.get("key")))
+                                    .value(String.valueOf(linkedHashMap.get("value")))
+                                    .build()));
+                    combinedDateToKeyValue.put(entryDate, keyValues);
+                } else {
+                    List<KeyValue> keyValues = combinedDateToKeyValue.get(entryDate);
+                    dateToKeyValueEntry.getValue().stream()
+                            .forEach(linkedHashMap -> keyValues.add(KeyValue.builder()
+                                    .key(String.valueOf(linkedHashMap.get("key")))
+                                    .value(String.valueOf(linkedHashMap.get("value")))
+                                    .build()));
+                }
+            }
         }
-        return dateToKeyValues.stream()
-                .map(dateToKeyValue -> dateToKeyValue.entrySet().stream()
-                        .filter(dateToKeyValueEntry -> !ContentsValidator.isLastFetchDateAfterEntryDate(lastFetchDate, String.valueOf(dateToKeyValueEntry.getKey())))
-                        .collect(
-                                toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1,
-                                        LinkedHashMap::new)))
-                .collect(Collectors.toList());
+        return combinedDateToKeyValue;
     }
 
-    private List<Map<String, List<LinkedHashMap>>> sortDateToKeyValues(List<Map<String, List<LinkedHashMap>>> dateToKeyValues) {
-        return dateToKeyValues.stream()
-                .map(dateToKeyValue -> dateToKeyValue.entrySet().stream()
-                        .sorted(Map.Entry.comparingByKey())
-                        .collect(
-                                toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1,
-                                        LinkedHashMap::new)))
-                .collect(Collectors.toList());
+    private Map<String, List<KeyValue>> filterDateToKeyValue(Map<String, List<KeyValue>> dateToKeyValue, String lastFetchDate) {
+        if (!StringUtils.hasText(lastFetchDate)) {
+            return dateToKeyValue;
+        }
+        return dateToKeyValue.entrySet().stream()
+                .filter(dateToKeyValueEntry -> !ContentsValidator.isLastFetchDateAfterEntryDate(lastFetchDate, String.valueOf(dateToKeyValueEntry.getKey())))
+                .collect(
+                        toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1,
+                                LinkedHashMap::new));
+    }
+
+    private Map<String, List<KeyValue>> sortDateToKeyValue(Map<String, List<KeyValue>> dateToKeyValue) {
+        return dateToKeyValue.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .collect(
+                        toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1,
+                                LinkedHashMap::new));
+    }
+
+    private List<KeyValue> getKeyValues(Map<String, List<KeyValue>> dateToKeyValue) {
+        List<KeyValue> keyValues = new ArrayList<>();
+        dateToKeyValue.entrySet().stream()
+                .forEach(sortedDateToKeyValueEntry -> sortedDateToKeyValueEntry.getValue().stream()
+                        .forEach(keyValue -> keyValues.add(keyValue)));
+        return keyValues;
     }
 
     public File getImage(GetImageRequest getImageRequest) {
