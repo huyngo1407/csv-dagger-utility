@@ -1,0 +1,73 @@
+errors:
+  BLK:
+    en:
+      20230605:
+      - version: latest
+        key: error.wrong_password
+        value: BLK Wrong password
+      20230607:
+      - version: latest
+        key: error.not_found
+        value: BLK Not found
+      - version: latest
+        key: error.internal_server
+        value: BLK Internal server error
+      19950714:
+      - version: latest
+        key: error.proxy
+        value: BLK Proxy
+    id:
+      20230605:
+      - version: latest
+        key: error.wrong_password
+        value: BLK Kata Sandi Salah
+      19950714:
+      - version: latest
+        key: error.proxy
+        value: BLK Proksi
+  SOC:
+    en:
+      20230605:
+      - version: latest
+        key: error.wrong_password
+        value: SOC Wrong password
+labels:
+  BLK:
+    en:
+      20230605:
+      - version: latest
+        key: label.login
+        value: BLK Login
+      20230607:
+      - version: latest
+        key: label.breadcrumb
+        value: BLK Breadcrumb
+      - version: latest
+        key: label.buy
+        value: BLK Buy
+      19950714:
+      - version: latest
+        key: label.logout
+        value: BLK Logout
+    id:
+      20230605:
+      - version: latest
+        key: label.login
+        value: BLK Gabung
+      20230607:
+      - version: latest
+        key: label.breadcrumb
+        value: BLK Remah roti
+      - version: latest
+        key: label.buy
+        value: BLK Membeli
+      19950714:
+      - version: latest
+        key: label.logout
+        value: BLK Keluar
+  SOC:
+    en:
+      20230605:
+      - version: latest
+        key: label.login
+        value: SOC Login
