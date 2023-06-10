@@ -30,7 +30,7 @@ public class AppRunner implements CommandLineRunner {
         try {
             Map<String, Object> imageData = YamlUtil.read(imagePath);
             Map<String, Object> contentData = YamlUtil.read(contentPath);
-            ContentService.RECORD_TO_PARTNER_ID = ContentMapper.toMap(imageData, contentData);
+            ContentService.CONTENT_TO_PARTNER_ID = ContentMapper.toMap(imageData, contentData);
             cacheContents();
         } catch (FileNotFoundException e) {
             log.error("Can not find yaml file");
@@ -41,7 +41,7 @@ public class AppRunner implements CommandLineRunner {
     }
 
     private void cacheContents() {
-        ContentService.RECORD_TO_PARTNER_ID.entrySet()
+        ContentService.CONTENT_TO_PARTNER_ID.entrySet()
                 .stream()
                 .forEach(
                         record -> cacheManager.getCache("contents")

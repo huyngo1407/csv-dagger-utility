@@ -2,12 +2,12 @@ package org.example.service.content;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.controller.request.ContentRequest;
+import org.example.controller.request.GetContentRequest;
 import org.example.controller.request.GetImageRequest;
 import org.example.custom_exception.NotFoundException;
-import org.example.model.KeyValue;
-import org.example.validator.ContentsValidator;
-import org.springframework.cache.annotation.Cacheable;
+import org.example.mapper.ContentMapper;
+import org.example.model.Content;
+import org.example.validator.GetContentsValidator;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -15,7 +15,6 @@ import org.springframework.util.StringUtils;
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toMap;
 
@@ -23,97 +22,109 @@ import static java.util.stream.Collectors.toMap;
 @Service
 @Slf4j
 public class ContentService {
-    public static Map<String, Object> RECORD_TO_PARTNER_ID = new ConcurrentHashMap<>();
+    public static Map<String, Object> CONTENT_TO_PARTNER_ID = new ConcurrentHashMap<>();
 
 
-    @Cacheable(value = "contents")
-    public List<KeyValue> getContents(ContentRequest contentRequest) {
+    //    @Cacheable(value = "contents")
+    public List<Content> getContents(GetContentRequest getContentRequest) {
         log.info("Start fetching contents");
-        List<KeyValue> keyValues = filterContent(contentRequest);
-        return keyValues;
+        List<Content> contents = filterContent(getContentRequest);
+        return contents;
     }
 
-    private List<KeyValue> filterContent(ContentRequest contentRequest) {
-        if (RECORD_TO_PARTNER_ID.isEmpty() || !ContentsValidator.isContentTypeValid(contentRequest.getContentType())) {
+    private List<Content> filterContent(GetContentRequest getContentRequest) {
+        if (CONTENT_TO_PARTNER_ID.isEmpty() || !GetContentsValidator.isContentTypeValid(getContentRequest.getContentType())) {
             return new ArrayList<>();
         }
-        Map<String, List<LinkedHashMap>> filteredByContentType = (Map<String, List<LinkedHashMap>>) RECORD_TO_PARTNER_ID.get(contentRequest.getContentType());
-        Map<String, List<LinkedHashMap>> filteredByPartnerId = (Map<String, List<LinkedHashMap>>) filteredByContentType.get(contentRequest.getPartnerId());
-        List<Map<String, List<LinkedHashMap>>> filteredByLanguages = !ObjectUtils.isEmpty(filteredByPartnerId.get(contentRequest.getLang())) ?
-                Collections.singletonList((Map<String, List<LinkedHashMap>>) filteredByPartnerId.get(contentRequest.getLang())) :
-                filteredByPartnerId.entrySet()
-                        .stream().map(filteredByPartnerIdEntry -> (Map<String, List<LinkedHashMap>>) filteredByPartnerIdEntry.getValue())
-                        .collect(Collectors.toList());
-        Map<String, List<KeyValue>> combinedDateToKeyValue = combineDateToKeyValue(filteredByLanguages);
-        Map<String, List<KeyValue>> filteredDateToKeyValue = filterDateToKeyValue(combinedDateToKeyValue, contentRequest.getLastFetchDate());
-        Map<String, List<KeyValue>> sortedDateToKeyValue = sortDateToKeyValue(filteredDateToKeyValue);
-        return getKeyValues(sortedDateToKeyValue);
+        Map<String, LinkedHashMap> filteredByContentType = (Map<String, LinkedHashMap>) CONTENT_TO_PARTNER_ID.getOrDefault(getContentRequest.getContentType(), new HashMap<>());
+        Map<String, LinkedHashMap> filteredByPartnerId = (Map<String, LinkedHashMap>) filteredByContentType.getOrDefault(getContentRequest.getPartnerId(), new LinkedHashMap<>());
+        Map<String, LinkedHashMap> filteredByLanguage = filterByLanguage(filteredByPartnerId, getContentRequest.getLanguage());
+        Map<String, LinkedHashMap> filteredByLastFetchDate = filterByLastFetchDate(filteredByLanguage, getContentRequest.getLastFetchDate());
+        Map<String, List<Content>> reconstructedAndCombinedDataToSameDate = reconstructAndCombineDataToSameDate(filteredByLastFetchDate, getContentRequest.getPartnerId());
+        Map<String, List<Content>> sortedData = sortData(reconstructedAndCombinedDataToSameDate);
+        List<Content> flattedData = flatData(sortedData);
+        return flattedData;
     }
 
-    private Map<String, List<KeyValue>> combineDateToKeyValue(List<Map<String, List<LinkedHashMap>>> filteredByLanguages) {
-        Map<String, List<KeyValue>> combinedDateToKeyValue = new HashMap<>();
-        for (Map<String, List<LinkedHashMap>> filteredByLanguage : filteredByLanguages) {
-            for (Map.Entry<String, List<LinkedHashMap>> filteredByLanguageEntry : filteredByLanguage.entrySet()) {
-                String entryDate = String.valueOf(filteredByLanguageEntry.getKey());
-                if (ObjectUtils.isEmpty(combinedDateToKeyValue.get(entryDate))) {
-                    List<KeyValue> keyValues = new ArrayList<>();
-                    filteredByLanguageEntry.getValue().stream()
-                            .forEach(linkedHashMap -> keyValues.add(KeyValue.builder()
-                                    .key(String.valueOf(linkedHashMap.get("key")))
-                                    .value(String.valueOf(linkedHashMap.get("value")))
-                                    .build()));
-                    combinedDateToKeyValue.put(entryDate, keyValues);
-                } else {
-                    List<KeyValue> keyValues = combinedDateToKeyValue.get(entryDate);
-                    filteredByLanguageEntry.getValue().stream()
-                            .forEach(linkedHashMap -> keyValues.add(KeyValue.builder()
-                                    .key(String.valueOf(linkedHashMap.get("key")))
-                                    .value(String.valueOf(linkedHashMap.get("value")))
-                                    .build()));
-                }
-            }
-        }
-        return combinedDateToKeyValue;
+    private Map<String, LinkedHashMap> filterByLanguage(Map<String, LinkedHashMap> filteredByPartnerId, String language) {
+        return !StringUtils.hasText(language) ?
+                (LinkedHashMap) filteredByPartnerId :
+                Map.of(
+                        language,
+                        filteredByPartnerId.get(language)
+                );
     }
 
-    private Map<String, List<KeyValue>> filterDateToKeyValue(Map<String, List<KeyValue>> dateToKeyValue, String lastFetchDate) {
+    private Map<String, LinkedHashMap> filterByLastFetchDate(Map<String, LinkedHashMap> filteredByLanguage, String lastFetchDate) {
         if (!StringUtils.hasText(lastFetchDate)) {
-            return dateToKeyValue;
+            return filteredByLanguage;
         }
-        return dateToKeyValue.entrySet().stream()
-                .filter(dateToKeyValueEntry -> !ContentsValidator.isLastFetchDateAfterEntryDate(lastFetchDate, String.valueOf(dateToKeyValueEntry.getKey())))
-                .collect(
-                        toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1,
-                                LinkedHashMap::new));
+        Map<String, LinkedHashMap> filteredByLastFetchDate = new HashMap<>();
+        for (Map.Entry<String, LinkedHashMap> filteredByLanguageEntry : filteredByLanguage.entrySet()) {
+            LinkedHashMap filteredResult = ((Map<String, LinkedHashMap>) filteredByLanguageEntry.getValue()).entrySet().stream()
+                    .filter(dateToKeyValueEntry -> !GetContentsValidator.isLastFetchDateAfterEntryDate(lastFetchDate, String.valueOf(dateToKeyValueEntry.getKey())))
+                    .collect(
+                            toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1,
+                                    LinkedHashMap::new));
+            filteredByLastFetchDate.put(filteredByLanguageEntry.getKey(), filteredResult);
+        }
+        return filteredByLastFetchDate;
     }
 
-    private Map<String, List<KeyValue>> sortDateToKeyValue(Map<String, List<KeyValue>> dateToKeyValue) {
-        return dateToKeyValue.entrySet().stream()
+    private Map<String, List<Content>> reconstructAndCombineDataToSameDate(Map<String, LinkedHashMap> filteredAndSortedByLastFetchDate, String partnerId) {
+        Map<String, List<Content>> result = new HashMap<>();
+        filteredAndSortedByLastFetchDate.entrySet().stream()
+                .forEach((filteredAndSortedByLastFetchDateEntry) -> {
+                    String language = filteredAndSortedByLastFetchDateEntry.getKey();
+                    Map<String, LinkedHashMap> dateToKeyValue = filteredAndSortedByLastFetchDateEntry.getValue();
+                    dateToKeyValue.entrySet().stream()
+                            .forEach((dateToKeyValueEntry) -> {
+                                String entryDate = String.valueOf(dateToKeyValueEntry.getKey());
+                                if (ObjectUtils.isEmpty(result.get(entryDate))) {
+                                    List<Content> contents = new ArrayList<>();
+                                    ((List<LinkedHashMap>) dateToKeyValueEntry.getValue()).stream()
+                                            .forEach(linkedHashMap -> contents.add(ContentMapper.toModel(linkedHashMap, partnerId, language)));
+                                    result.put(entryDate, contents);
+                                } else {
+                                    List<Content> contents = result.get(entryDate);
+                                    ((List<LinkedHashMap>) dateToKeyValueEntry.getValue()).stream()
+                                            .forEach(linkedHashMap -> contents.add(ContentMapper.toModel(linkedHashMap, partnerId, language)));
+                                    result.put(entryDate, contents);
+                                }
+                            });
+                });
+        return result;
+    }
+
+    private Map<String, List<Content>> sortData(Map<String, List<Content>> reconstructedAndCombinedDataToSameDate) {
+        return reconstructedAndCombinedDataToSameDate.entrySet().stream()
                 .sorted(Map.Entry.comparingByKey())
                 .collect(
                         toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1,
                                 LinkedHashMap::new));
     }
 
-    private List<KeyValue> getKeyValues(Map<String, List<KeyValue>> dateToKeyValue) {
-        List<KeyValue> keyValues = new ArrayList<>();
-        dateToKeyValue.entrySet().stream()
-                .forEach(sortedDateToKeyValueEntry -> sortedDateToKeyValueEntry.getValue().stream()
-                        .forEach(keyValue -> keyValues.add(keyValue)));
-        return keyValues;
+    private List<Content> flatData(Map<String, List<Content>> reconstructedAndCombinedDataToSameDate) {
+        List<Content> contents = new ArrayList<>();
+        reconstructedAndCombinedDataToSameDate.entrySet().stream()
+                .forEach(reconstructedAndCombinedDataToSameDateEntry -> {
+                    List<Content> data = reconstructedAndCombinedDataToSameDateEntry.getValue();
+                    contents.addAll(data);
+                });
+        return contents;
     }
 
     public File getImage(GetImageRequest getImageRequest) {
-        Map<String, List<LinkedHashMap>> imageToPartnerId = (Map<String, List<LinkedHashMap>>) RECORD_TO_PARTNER_ID.get("image");
+        Map<String, List<LinkedHashMap>> imageToPartnerId = (Map<String, List<LinkedHashMap>>) CONTENT_TO_PARTNER_ID.get("images");
         Map<String, List<LinkedHashMap>> partnerIdToLanguage = (Map<String, List<LinkedHashMap>>) imageToPartnerId.get(getImageRequest.getPartnerId());
         Map<String, List<LinkedHashMap>> languageToDate = (Map<String, List<LinkedHashMap>>) partnerIdToLanguage.get("en");
-        List<LinkedHashMap> keyValues = languageToDate.get("19700101");
-        for (LinkedHashMap keyValue : keyValues) {
-            String key = keyValue.get("key").toString();
+        List<LinkedHashMap> contents = languageToDate.get("19700101");
+        for (LinkedHashMap content : contents) {
+            String key = content.get("key").toString();
             if (!key.equals(getImageRequest.getImageKey())) {
                 continue;
             }
-            String absoluteFilePath = keyValue.get("value").toString();
+            String absoluteFilePath = content.get("value").toString();
             File file = new File(absoluteFilePath);
             return file;
         }
