@@ -3,7 +3,7 @@ server:
     context-path: /v1
 folder:
   path:
-    image: src/main/resources
+    image: src/main/resources/
 file:
   path:
     image: public/image.yaml
