@@ -6,6 +6,7 @@ import org.example.controller.request.GetContentRequest;
 import org.example.mapper.ContentMapper;
 import org.example.model.Content;
 import org.example.validator.GetContentsValidator;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -22,7 +23,7 @@ public class ContentService {
 
     public static Map<String, Object> CONTENT_TO_PARTNER_ID = new ConcurrentHashMap<>();
 
-    //    @Cacheable(value = "contents")
+    @Cacheable(value = "contents")
     public List<Content> getContents(GetContentRequest getContentRequest) {
         log.info("Start fetching contents");
         List<Content> contents = filterContent(getContentRequest);
