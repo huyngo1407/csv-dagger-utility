@@ -3,8 +3,6 @@ package org.example.service.content;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.controller.request.GetContentRequest;
-import org.example.controller.request.GetImageRequest;
-import org.example.custom_exception.NotFoundException;
 import org.example.mapper.ContentMapper;
 import org.example.model.Content;
 import org.example.validator.GetContentsValidator;
@@ -12,7 +10,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
-import java.io.File;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -22,8 +19,8 @@ import static java.util.stream.Collectors.toMap;
 @Service
 @Slf4j
 public class ContentService {
-    public static Map<String, Object> CONTENT_TO_PARTNER_ID = new ConcurrentHashMap<>();
 
+    public static Map<String, Object> CONTENT_TO_PARTNER_ID = new ConcurrentHashMap<>();
 
     //    @Cacheable(value = "contents")
     public List<Content> getContents(GetContentRequest getContentRequest) {
@@ -112,22 +109,5 @@ public class ContentService {
                     contents.addAll(data);
                 });
         return contents;
-    }
-
-    public File getImage(GetImageRequest getImageRequest) {
-        Map<String, List<LinkedHashMap>> imageToPartnerId = (Map<String, List<LinkedHashMap>>) CONTENT_TO_PARTNER_ID.get("images");
-        Map<String, List<LinkedHashMap>> partnerIdToLanguage = (Map<String, List<LinkedHashMap>>) imageToPartnerId.get(getImageRequest.getPartnerId());
-        Map<String, List<LinkedHashMap>> languageToDate = (Map<String, List<LinkedHashMap>>) partnerIdToLanguage.get("en");
-        List<LinkedHashMap> contents = languageToDate.get("19700101");
-        for (LinkedHashMap content : contents) {
-            String key = content.get("key").toString();
-            if (!key.equals(getImageRequest.getImageKey())) {
-                continue;
-            }
-            String absoluteFilePath = content.get("value").toString();
-            File file = new File(absoluteFilePath);
-            return file;
-        }
-        throw new NotFoundException("Can not find image file");
     }
 }

@@ -1,6 +1,6 @@
 BLK:
   - key: image001
-    value: src/main/resources/public/image/black-coffee-stock.jpg
+    value: public/image/black-coffee-stock.jpg
 SOC:
   - key: image002
-    value: src/main/resources/public/image/vinyl.png
+    value: public/image/vinyl.png

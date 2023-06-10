@@ -1,0 +1,6 @@
+BLK:
+- key: image001
+  value: public/image/black-coffee-stock.jpg
+SOC:
+- key: image002
+  value: public/image/vinyl.png
