@@ -1,0 +1,16 @@
+labels,20230520,BLK,id,prelogin.button.apply,Daftar id/ Login id,latest
+errors,20230520,SOC,id,prelogin.button.already_have_account,Saya sudah punya akun id,latest
+labels,20230520,BLK,en,prelogin.title.product.casa,%1$s en,latest
+labels,20230520,SOC,id,prelogin.title.product.card,Kartu Debet id,latest
+errors,20230520,SOC,id,prelogin.button.execute,Execute id,latest
+labels,20230521,SOC,en,prelogin.button.apply,Daftar en/ Login en,latest
+labels,20230521,BLK,en,prelogin.button.already_have_account,Saya sudah punya akun en,latest
+labels,20230521,BLK,id,prelogin.title.product.casa,%1$s id,latest
+errors,20230522,BLK,en,prelogin.title.product.card,Kartu Debet id,latest
+labels,20230522,SOC,en,prelogin.button.execute,Execute en,latest
+labels,20230519,BLK,en,prelogin.button.pay,Pay en,latest
+labels,20230522,BLK,en,prelogin.title.order.name,Order name en,latest
+errors,20230501,SOC,id,prelogin.button.pay,Pay id,latest
+labels,20230522,SOC,en,prelogin.button.exit,Exit en,latest
+labels,19950714,SOC,id,prelogin.button.exit,Exit id,latest
+errors,20230522,BLK,id,prelogin.title.order.name,Order name id,latest

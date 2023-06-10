@@ -7,9 +7,9 @@ import org.example.value_object.datetime.DatePattern;
 import java.time.LocalDate;
 
 @UtilityClass
-public class ContentsValidator {
+public class GetContentsValidator {
     public static boolean isContentTypeValid(String contentType) {
-        return contentType.equals("label") || contentType.equals("error");
+        return contentType.equals("labels") || contentType.equals("errors");
     }
 
     public static boolean isLastFetchDateAfterEntryDate(String lastFetchDateStr, String entryDateStr) {

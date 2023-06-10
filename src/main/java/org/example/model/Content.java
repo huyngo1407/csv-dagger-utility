@@ -5,7 +5,10 @@ import lombok.experimental.SuperBuilder;
 
 @Data
 @SuperBuilder
-public class KeyValue {
+public class Content {
+    private String version;
+    private String partnerId;
+    private String language;
     private String key;
     private String value;
 }

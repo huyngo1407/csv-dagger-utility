@@ -3,6 +3,7 @@ package org.example.mapper;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.experimental.UtilityClass;
+import org.example.model.Content;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -11,25 +12,26 @@ import java.util.Map;
 
 @UtilityClass
 public class ContentMapper {
+    public static Content toModel(LinkedHashMap linkedHashMap, String partnerId, String language) {
+        return Content.builder()
+                .version(String.valueOf(linkedHashMap.get("version")))
+                .partnerId(partnerId)
+                .language(language)
+                .key(String.valueOf(linkedHashMap.get("key")))
+                .value(String.valueOf(linkedHashMap.get("value")))
+                .build();
+    }
+
+
     public static Map<String, Object> toMap(Map<String, Object> imageData, Map<String, Object> contentData) throws JsonProcessingException {
-        Map<String, Object> labelToPartnerId = getLabels(contentData);
-        Map<String, Object> errorToPartnerId = getErrors(contentData);
+        Map<String, Object> labelToPartnerId = (LinkedHashMap<String, Object>) contentData.get("labels");
+        Map<String, Object> errorToPartnerId = (LinkedHashMap<String, Object>) contentData.get("errors");
         Map<String, Object> imageToPartnerId = getImages(imageData);
         Map<String, Object> result = new HashMap<>();
-        result.put("label", labelToPartnerId);
-        result.put("error", errorToPartnerId);
-        result.put("image", imageToPartnerId);
+        result.put("labels", labelToPartnerId);
+        result.put("errors", errorToPartnerId);
+        result.put("images", imageToPartnerId);
         return result;
-    }
-
-    private static Map<String, Object> getLabels(Map<String, Object> contentData) {
-        LinkedHashMap<String, Object> labelData = (LinkedHashMap<String, Object>) contentData.get("label");
-        return labelData;
-    }
-
-    private static Map<String, Object> getErrors(Map<String, Object> contentData) {
-        LinkedHashMap<String, Object> errorData = (LinkedHashMap<String, Object>) contentData.get("error");
-        return errorData;
     }
 
     private static Map<String, Object> getImages(Map<String, Object> imageData) {
