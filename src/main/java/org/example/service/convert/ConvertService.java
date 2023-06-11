@@ -9,32 +9,14 @@ import java.util.*;
 @Service
 public class ConvertService {
     public Map<String, LinkedHashMap> contentCsvToYaml(List<String[]> csvData) {
-        Map<String, LinkedHashMap> contentToPartnerId = new HashMap<>();
+        Map<String, LinkedHashMap> partnerIdToLanguage = new LinkedHashMap();
         for (String[] line : csvData) {
-            String content = line[0];
-            Integer entryDate = Integer.valueOf(line[1]);
-            String partnerId = line[2];
-            String language = line[3];
+            Integer entryDate = Integer.valueOf(line[0]);
+            String partnerId = line[1];
+            String language = line[2];
 
             LinkedHashMap keyValue = KeyValueMapper.forContent(line);
 
-            if (ObjectUtils.isEmpty(contentToPartnerId.get(content))) {
-                List<LinkedHashMap> keyValues = List.of(keyValue);
-
-                LinkedHashMap entryDateToKeyValue = new LinkedHashMap();
-                entryDateToKeyValue.put(entryDate, keyValues);
-
-                LinkedHashMap languageToEntryDate = new LinkedHashMap();
-                languageToEntryDate.put(language, entryDateToKeyValue);
-
-                LinkedHashMap partnerIdToLanguage = new LinkedHashMap();
-                partnerIdToLanguage.put(partnerId, languageToEntryDate);
-
-                contentToPartnerId.put(content, partnerIdToLanguage);
-                continue;
-            }
-
-            Map<String, LinkedHashMap> partnerIdToLanguage = contentToPartnerId.get(content);
             if (ObjectUtils.isEmpty(partnerIdToLanguage.get(partnerId))) {
                 List<LinkedHashMap> keyValues = List.of(keyValue);
 
@@ -70,7 +52,7 @@ public class ConvertService {
             keyValues.add(keyValue);
             entryDateToKeyValue.put(entryDate, keyValues);
         }
-        return contentToPartnerId;
+        return partnerIdToLanguage;
     }
 
     public Map<String, List<LinkedHashMap>> imageCsvToYaml(List<String[]> csvData) {

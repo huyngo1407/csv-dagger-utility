@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URLConnection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -67,17 +68,22 @@ public class ContentController {
     @GetMapping("/content-csv-to-yaml")
     @ResponseBody
     public ResponseEntity<Object> contentCsvToYaml() throws IOException, CsvException {
-        List<String[]> csvData = CsvUtil.read("src/main/resources/document/content-csv-to-yaml-ver2.csv");
-        Map<String, LinkedHashMap> contentToPartnerId = convertService.contentCsvToYaml(csvData);
-        YamlUtil.write(contentToPartnerId, "src/main/resources/document/content-csv-to-yaml-ver2.yaml");
+        List<String[]> csvLabels = CsvUtil.read("src/main/resources/document/label-csv-to-yaml.csv");
+        List<String[]> csvErrors = CsvUtil.read("src/main/resources/document/error-csv-to-yaml.csv");
+        Map<String, LinkedHashMap> convertedCsvLabel = convertService.contentCsvToYaml(csvLabels);
+        Map<String, LinkedHashMap> convertedCsvError = convertService.contentCsvToYaml(csvErrors);
+        Map<String, Object> contentToPartnerId = new HashMap<>();
+        contentToPartnerId.put("labels", convertedCsvLabel);
+        contentToPartnerId.put("errors", convertedCsvError);
+        YamlUtil.write(contentToPartnerId, "src/main/resources/document/content-csv-to-yaml.yaml");
         return ApiResponseUtil.build(HttpStatus.OK, "Content csv to yaml successful", contentToPartnerId);
     }
 
     @GetMapping("/image-csv-to-yaml")
     @ResponseBody
     public ResponseEntity<Object> imageCsvToYaml() throws IOException, CsvException {
-        List<String[]> csvData = CsvUtil.read("src/main/resources/document/image-csv-to-yaml.csv");
-        Map<String, List<LinkedHashMap>> partnerToKeyValue = convertService.imageCsvToYaml(csvData);
+        List<String[]> csvImages = CsvUtil.read("src/main/resources/document/image-csv-to-yaml.csv");
+        Map<String, List<LinkedHashMap>> partnerToKeyValue = convertService.imageCsvToYaml(csvImages);
         YamlUtil.write(partnerToKeyValue, "src/main/resources/document/image-csv-to-yaml.yaml");
         return ApiResponseUtil.build(HttpStatus.OK, "Image csv to yaml successful", partnerToKeyValue);
     }
