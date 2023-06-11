@@ -7,9 +7,9 @@ import java.util.LinkedHashMap;
 @UtilityClass
 public class KeyValueMapper {
     public static LinkedHashMap forContent(String[] data) {
-        String key = data[4];
-        String value = data[5];
-        String version = data[6];
+        String key = data[3];
+        String value = data[4];
+        String version = data[5];
 
         LinkedHashMap keyValue = new LinkedHashMap();
         keyValue.put("version", version);
